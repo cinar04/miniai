@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Çiçi Super AI Chat</title>
+<title>Çiçi Super AI Chat 🚀</title>
 <style>
 body { font-family: 'Arial', sans-serif; margin:0; background:#111; color:#eee; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; height:100vh; }
 #header { padding:10px; text-align:center; width:100%; background:#222; }
@@ -37,7 +37,6 @@ function toggleTheme() {
   document.getElementById('chat').style.background = darkTheme ? '#1a1a1a' : '#fff';
 }
 
-// Chat ve token ayarları
 const chatDiv = document.getElementById('chat');
 const HF_TOKEN = "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";
 
@@ -55,16 +54,14 @@ function speak(text) {
 // Mini oyunlar
 function checkMiniGame(question) {
   question = question.toLowerCase();
-  // Taş-kağıt-makas
   if(question.includes("taş-kağıt-makas")) {
     const choices = ["taş","kağıt","makas"];
     const aiChoice = choices[Math.floor(Math.random()*3)];
     return `Ben seçtim: ${aiChoice} 😎`;
   }
-  // Sayı tahmin
   if(question.includes("sayı tahmin")) {
     const number = Math.floor(Math.random()*100)+1;
-    return `Akıllıca düşündüm, 1-100 arasında sayı: ${number}`;
+    return `Tahminim: 1-100 arasında sayı: ${number}`;
   }
   return null;
 }
@@ -89,9 +86,9 @@ async function sendQuestion() {
     return;
   }
 
-  // API çağrısı
+  // API çağrısı (CORS proxy ile)
   try {
-    const response = await fetch("https://api-inference.huggingface.co/models/gpt2", {
+    const response = await fetch(`https://corsproxy.io/?https://api-inference.huggingface.co/models/distilgpt2`, {
       method:"POST",
       headers:{
         "Authorization": `Bearer ${HF_TOKEN}`,
