@@ -3,58 +3,123 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini AI Chat</title>
+<title>Çiçi Super AI Chat</title>
 <style>
-  body { font-family: sans-serif; background: #1e1e1e; color: #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin:0; }
-  #chat { width: 90%; max-width: 500px; height: 70%; border: 1px solid #444; padding: 10px; overflow-y: auto; background: #2c2c2c; border-radius: 8px; }
-  .user { color: #4fc3f7; margin: 5px 0; }
-  .bot { color: #ffb74d; margin: 5px 0; }
-  input { width: 80%; padding: 10px; margin-top: 10px; border-radius: 5px; border: none; }
-  button { padding: 10px; border-radius: 5px; border: none; background: #4fc3f7; color: #fff; cursor: pointer; margin-left: 5px; }
-  button:hover { background: #039be5; }
+body { font-family: 'Arial', sans-serif; margin:0; background:#111; color:#eee; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; height:100vh; }
+#header { padding:10px; text-align:center; width:100%; background:#222; }
+#chat { width:90%; max-width:600px; flex:1; overflow-y:auto; padding:10px; background:#1a1a1a; border-radius:10px; margin-top:10px; }
+.user { color:#4fc3f7; margin:5px 0; }
+.bot { color:#ffb74d; margin:5px 0; }
+input { width:70%; padding:10px; border-radius:5px; border:none; margin-top:10px; }
+button { padding:10px 15px; border:none; border-radius:5px; background:#4fc3f7; color:white; cursor:pointer; margin-left:5px; }
+button:hover { background:#039be5; }
+.theme-toggle { margin-left:10px; cursor:pointer; color:#fff; }
+code { background:#333; padding:2px 4px; border-radius:4px; color:#8ef; }
 </style>
 </head>
 <body>
-<h2>Mini AI Chat</h2>
+<div id="header">
+<h2>Çiçi Super AI Chat 🚀</h2>
+<button onclick="toggleTheme()" class="theme-toggle">Tema Değiştir</button>
+</div>
 <div id="chat"></div>
-<div>
-  <input id="question" type="text" placeholder="Sorunu yaz...">
-  <button onclick="sendQuestion()">Gönder</button>
+<div style="margin:10px; display:flex; justify-content:center; width:90%; max-width:600px;">
+<input id="question" type="text" placeholder="Sorunu yaz...">
+<button onclick="sendQuestion()">Gönder</button>
 </div>
 
 <script>
+let darkTheme = true;
+function toggleTheme() {
+  darkTheme = !darkTheme;
+  document.body.style.background = darkTheme ? '#111' : '#eee';
+  document.body.style.color = darkTheme ? '#eee' : '#111';
+  document.getElementById('chat').style.background = darkTheme ? '#1a1a1a' : '#fff';
+}
+
+// Chat ve token ayarları
 const chatDiv = document.getElementById('chat');
+const HF_TOKEN = "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";
 
+// LocalStorage ile geçmiş
+if(localStorage.getItem('chatHistory')) chatDiv.innerHTML = localStorage.getItem('chatHistory');
+
+// Sesli cevap
+function speak(text) {
+  if('speechSynthesis' in window){
+    const utter = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utter);
+  }
+}
+
+// Mini oyunlar
+function checkMiniGame(question) {
+  question = question.toLowerCase();
+  // Taş-kağıt-makas
+  if(question.includes("taş-kağıt-makas")) {
+    const choices = ["taş","kağıt","makas"];
+    const aiChoice = choices[Math.floor(Math.random()*3)];
+    return `Ben seçtim: ${aiChoice} 😎`;
+  }
+  // Sayı tahmin
+  if(question.includes("sayı tahmin")) {
+    const number = Math.floor(Math.random()*100)+1;
+    return `Akıllıca düşündüm, 1-100 arasında sayı: ${number}`;
+  }
+  return null;
+}
+
+// Mesaj gönderme
 async function sendQuestion() {
-  const questionInput = document.getElementById('question');
-  const question = questionInput.value.trim();
+  const input = document.getElementById('question');
+  const question = input.value.trim();
   if(!question) return;
-
-  // Kullanıcı mesajını göster
   chatDiv.innerHTML += `<div class="user">Sen: ${question}</div>`;
-  questionInput.value = '';
+  input.value='';
   chatDiv.innerHTML += `<div class="bot">AI: Yazıyor...</div>`;
   chatDiv.scrollTop = chatDiv.scrollHeight;
 
-  // API çağrısı
-  const response = await fetch("https://api-inference.huggingface.co/models/gpt2", {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer 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",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ inputs: question })
-  });
+  // Mini oyun kontrolü
+  const miniGame = checkMiniGame(question);
+  if(miniGame) {
+    const botDivs = chatDiv.getElementsByClassName('bot');
+    botDivs[botDivs.length-1].innerHTML = `AI: ${miniGame}`;
+    speak(miniGame);
+    localStorage.setItem('chatHistory', chatDiv.innerHTML);
+    return;
+  }
 
-  const data = await response.json();
-  const botDivs = chatDiv.getElementsByClassName('bot');
-  if(data[0] && data[0].generated_text) {
-    botDivs[botDivs.length-1].innerHTML = `AI: ${data[0].generated_text}`;
-  } else {
-    botDivs[botDivs.length-1].innerHTML = "AI: Cevap alınamadı 😕";
+  // API çağrısı
+  try {
+    const response = await fetch("https://api-inference.huggingface.co/models/gpt2", {
+      method:"POST",
+      headers:{
+        "Authorization": `Bearer ${HF_TOKEN}`,
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({inputs:question})
+    });
+    const data = await response.json();
+    const botDivs = chatDiv.getElementsByClassName('bot');
+    if(data[0] && data[0].generated_text) {
+      let text = data[0].generated_text.replace(question,'').trim();
+      botDivs[botDivs.length-1].innerHTML = `AI: ${text}`;
+      speak(text);
+    } else {
+      botDivs[botDivs.length-1].innerHTML = "AI: Cevap alınamadı 😕";
+    }
+  } catch(e) {
+    const botDivs = chatDiv.getElementsByClassName('bot');
+    botDivs[botDivs.length-1].innerHTML = "AI: API hatası 😭";
   }
   chatDiv.scrollTop = chatDiv.scrollHeight;
+  localStorage.setItem('chatHistory', chatDiv.innerHTML);
 }
+
+// Enter ile gönder
+document.getElementById('question').addEventListener('keypress',function(e){
+  if(e.key==='Enter') sendQuestion();
+});
 </script>
 </body>
 </html>
