@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini AI Chat</title>
+<style>
+  body { font-family: sans-serif; background: #1e1e1e; color: #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin:0; }
+  #chat { width: 90%; max-width: 500px; height: 70%; border: 1px solid #444; padding: 10px; overflow-y: auto; background: #2c2c2c; border-radius: 8px; }
+  .user { color: #4fc3f7; margin: 5px 0; }
+  .bot { color: #ffb74d; margin: 5px 0; }
+  input { width: 80%; padding: 10px; margin-top: 10px; border-radius: 5px; border: none; }
+  button { padding: 10px; border-radius: 5px; border: none; background: #4fc3f7; color: #fff; cursor: pointer; margin-left: 5px; }
+  button:hover { background: #039be5; }
+</style>
+</head>
+<body>
+<h2>Mini AI Chat</h2>
+<div id="chat"></div>
+<div>
+  <input id="question" type="text" placeholder="Sorunu yaz...">
+  <button onclick="sendQuestion()">Gönder</button>
+</div>
+
+<script>
+const chatDiv = document.getElementById('chat');
+
+async function sendQuestion() {
+  const questionInput = document.getElementById('question');
+  const question = questionInput.value.trim();
+  if(!question) return;
+
+  // Kullanıcı mesajını göster
+  chatDiv.innerHTML += `<div class="user">Sen: ${question}</div>`;
+  questionInput.value = '';
+  chatDiv.innerHTML += `<div class="bot">AI: Yazıyor...</div>`;
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+
+  // API çağrısı
+  const response = await fetch("https://api-inference.huggingface.co/models/gpt2", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer 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",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ inputs: question })
+  });
+
+  const data = await response.json();
+  const botDivs = chatDiv.getElementsByClassName('bot');
+  if(data[0] && data[0].generated_text) {
+    botDivs[botDivs.length-1].innerHTML = `AI: ${data[0].generated_text}`;
+  } else {
+    botDivs[botDivs.length-1].innerHTML = "AI: Cevap alınamadı 😕";
+  }
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+}
+</script>
+</body>
+</html>
